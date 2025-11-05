@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: uhes-60-frontend
-        image: nginx:alpine
+        image: 402495469929.dkr.ecr.us-east-1.amazonaws.com/ami-platform-frontend:beta-2.1.21
         envFrom:
         - configMapRef:
             name: uhes-60-frontend-config
