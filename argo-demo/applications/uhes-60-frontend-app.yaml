@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: uhes-60-frontend
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: uhes-60-frontend
+    app.kubernetes.io/part-of: ami-platform
+    environment: demo
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  
+  # Source configuration - points to our existing frontend k8s manifests
+  source:
+    repoURL: https://github.com/vacobuilt/argo-cd-demo.git
+    targetRevision: feature/argocd-demo
+    path: frontend/uhes-60/k8s
+  
+  # Destination configuration
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dev-us60-frontend
+  
+  # Sync policy configuration
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  
+  # Health check configuration
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+  
+  # Notification configuration
+  revisionHistoryLimit: 10

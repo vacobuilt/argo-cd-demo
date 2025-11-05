@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: uhes-60-frontend-config
+  namespace: dev-us60-frontend
+data:
+  NEXTAUTH_URL: "https://frontend.devamiplatform.com"
+  AUTH_TRUST_HOST: "true"
+  AUTH_KEYCLOAK_URL: "https://keycloak.devamiplatform.com"
+  AUTH_KEYCLOAK_REALM: "dev"
+  AUTH_KEYCLOAK_ISSUER: "https://keycloak.devamiplatform.com/realms/dev"
+  AUTH_KEYCLOAK_CLIENT_ID: "test-client"
+  AUTH_KEYCLOAK_CLIENT_UUID: "c1819f71-999d-4429-a00a-e959da6b473b"
+  AUTH_KEYCLOAK_ADMIN: "admin"
+  AUTH_KEYCLOAK_ADMIN_CLI: "admin-cli"
+  AUTH_KEYCLOAK_AUTHORIZATION_URL: "https://keycloak.devamiplatform.com/realms/dev/protocol/openid-connect/auth"
+  AUTH_KEYCLOAK_TOKEN_URL: "https://keycloak.devamiplatform.com/realms/dev/protocol/openid-connect/token"
+  AUTH_KEYCLOAK_USERINFO_URL: "https://keycloak.devamiplatform.com/realms/dev/protocol/openid-connect/userinfo"
+  AUTH_KEYCLOAK_WELL_KNOWN_URL: "https://keycloak.devamiplatform.com/realms/dev/.well-known/openid_configuration"
+  API_URL: "https://api.devamiplatform.com"
+  ANALITYCS_URL: "https://analytics.devamiplatform.com"
+  ANALITYCS_TENANT: "analytic_tenant"
+  ANALITYCS_ENVIRONMENT: "analytic_dev"
+  DEVICES_URL: "http://device-service:80"
+  DEVICES_TENANT: "pilot"
+  DEVICES_ENVIRONMENT: "dev"
+  NODE_OPTIONS: "--no-deprecation --max-http-header-size=65536"
+  NODE_ENV: "production"
+  NEXT_TELEMETRY_DISABLED: "1"

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev-us60-frontend
+  labels:
+    kubernetes.io/metadata.name: dev-us60-frontend
+    environment: development
+    security.policy: baseline
+    app.kubernetes.io/part-of: ami-platform
+    access.policy: team
+    owner: US60-team
+    app.kubernetes.io/name: dev-us60-frontend
+    istio-injection: enabled

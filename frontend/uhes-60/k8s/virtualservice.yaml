@@ -1,0 +1,22 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: ami-platform-frontend-vs
+  namespace: dev-us60-frontend
+  labels:
+    app: ami-platform-frontend
+    component: frontend
+spec:
+  hosts:
+  - frontend.devamiplatform.com
+  gateways:
+  - istio-system/ami-platform-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: uhes-60-frontend-service.dev-us60-frontend.svc.cluster.local
+        port:
+          number: 80
