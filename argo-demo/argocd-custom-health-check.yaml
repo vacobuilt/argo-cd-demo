@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: shared-platform-tools
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  # Custom health check for Deployments to show Unhealthy when health checks fail
+  resource.customizations: |
+    apps/Deployment:
+      health.lua: |
+        hs = {}
+        if obj.status ~= nil then
+          -- Check for unavailable replicas first
+          if obj.status.unavailableReplicas ~= nil and obj.status.unavailableReplicas > 0 then
+            hs.status = "Degraded"
+            hs.message = "Deployment has " .. obj.status.unavailableReplicas .. " unavailable replicas"
+            return hs
+          end
+          -- Check if available replicas is less than desired replicas
+          local availableReplicas = obj.status.availableReplicas or 0
+          if obj.status.replicas ~= nil and availableReplicas < obj.status.replicas then
+            hs.status = "Degraded"
+            hs.message = "Deployment has " .. (obj.status.replicas - availableReplicas) .. " unavailable replicas"
+            return hs
+          end
+          -- Check for rollout in progress
+          if obj.status.updatedReplicas ~= nil and obj.status.replicas ~= nil and obj.status.updatedReplicas < obj.status.replicas then
+            hs.status = "Progressing"
+            hs.message = "Waiting for rollout to finish: " .. obj.status.updatedReplicas .. " of " .. obj.status.replicas .. " updated replicas are available..."
+            return hs
+          end
+          -- Check for generation mismatch
+          if obj.status.observedGeneration ~= nil and obj.status.observedGeneration < obj.metadata.generation then
+            hs.status = "Progressing" 
+            hs.message = "Waiting for rollout to finish: observed deployment generation less than desired generation"
+            return hs
+          end
+        end
+        hs.status = "Healthy"
+        hs.message = "Deployment is healthy"
+        return hs
