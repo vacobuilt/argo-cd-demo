@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: http-proxy-data-ingestion-service
+  namespace: shared-platform-tools
+  labels:
+    app.kubernetes.io/name: http-proxy-data-ingestion-service
+    app.kubernetes.io/part-of: ami-platform
+    environment: demo
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  
+  # Source configuration - points to our http-proxy-data-ingestion k8s manifests
+  source:
+    repoURL: https://github.com/vacobuilt/argo-cd-demo.git
+    targetRevision: feature/argocd-demo
+    path: http-proxy-data-ingestion-service/k8s
+  
+  # Destination configuration
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dev-ami-platform-backend
+  
+  # Sync policy configuration
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  
+  # Health check configuration
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+  
+  # Notification configuration
+  revisionHistoryLimit: 10

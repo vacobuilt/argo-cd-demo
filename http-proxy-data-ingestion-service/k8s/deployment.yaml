@@ -1,0 +1,141 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: http-proxy-data-ingestion-service-v2
+  namespace: dev-ami-platform-backend
+  labels:
+    app: http-proxy-data-ingestion-service-v2
+    component: data-ingestion
+    version: v2
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: http-proxy-data-ingestion-service-v2
+  template:
+    metadata:
+      labels:
+        app: http-proxy-data-ingestion-service-v2
+        component: data-ingestion
+        version: v2
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/q/metrics"
+    spec:
+      serviceAccountName: http-proxy-data-ingestion-service
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 185
+        fsGroup: 185
+      containers:
+      - name: http-proxy-data-ingestion-service
+        image: 402495469929.dkr.ecr.us-east-1.amazonaws.com/ami-platform-backend:http-proxy-data-ingestion-service-v2-1.1.1-multiple-schema-merge-pr-fixed-prod
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: management
+          containerPort: 9090
+          protocol: TCP
+        env:
+        - name: QUARKUS_PROFILE
+          value: "prod"
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          valueFrom:
+            configMapKeyRef:
+              name: kafka-config
+              key: bootstrap.servers
+        - name: KAFKA_SCHEMA_REGISTRY_URL
+          valueFrom:
+            configMapKeyRef:
+              name: kafka-config
+              key: schema.registry.url
+        - name: AMI_TENANT
+          valueFrom:
+            configMapKeyRef:
+              name: ami-platform-config
+              key: tenant
+        - name: AMI_ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: ami-platform-config
+              key: environment
+        - name: QUARKUS_LOG_LEVEL
+          value: "INFO"
+        - name: QUARKUS_LOG_CATEGORY_COM_TRILLIANT_AMI_LEVEL
+          value: "DEBUG"
+        - name: QUARKUS_VIRTUAL_THREADS_ENABLED
+          value: "true"
+        - name: JAVA_OPTS_APPEND
+          value: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:+UseJVMCICompiler"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /q/health/live
+            port: 9090
+            scheme: HTTP
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+          successThreshold: 1
+        readinessProbe:
+          httpGet:
+            path: /q/health/ready
+            port: 9090
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+          successThreshold: 1
+        startupProbe:
+          httpGet:
+            path: /q/health/ready
+            port: 9090
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 30
+          successThreshold: 1
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: logs
+          mountPath: /deployments/logs
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: logs
+        emptyDir: {}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - http-proxy-data-ingestion-service-v2
+              topologyKey: kubernetes.io/hostname
+      tolerations:
+      - key: "ami-platform/workload"
+        operator: "Equal"
+        value: "data-ingestion"
+        effect: "NoSchedule"

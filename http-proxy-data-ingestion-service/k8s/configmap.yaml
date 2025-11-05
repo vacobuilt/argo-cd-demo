@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ami-platform-config
+  namespace: dev-ami-platform-backend
+  labels:
+    app: ami-platform
+    component: configuration
+data:
+  tenant: "pilot"
+  environment: "dev"
+  topic.template: "{tenant}.{environment}.raw-metering.v1"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-config
+  namespace: dev-ami-platform-backend
+  labels:
+    app: ami-platform
+    component: kafka-configuration
+data:
+  bootstrap.servers: "uhes-kafka-cluster-kafka-bootstrap.kafka:9092"
+  schema.registry.url: "http://confluent-schema-registry-service.kafka-schema-registry-confluent:8081"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: http-proxy-data-ingestion-service
+  namespace: dev-ami-platform-backend
+  labels:
+    app: http-proxy-data-ingestion-service
+    component: data-ingestion
+automountServiceAccountToken: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: http-proxy-data-ingestion-service
+  namespace: dev-ami-platform-backend
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: http-proxy-data-ingestion-service
+  namespace: dev-ami-platform-backend
+subjects:
+- kind: ServiceAccount
+  name: http-proxy-data-ingestion-service
+  namespace: dev-ami-platform-backend
+roleRef:
+  kind: Role
+  name: http-proxy-data-ingestion-service
+  apiGroup: rbac.authorization.k8s.io
