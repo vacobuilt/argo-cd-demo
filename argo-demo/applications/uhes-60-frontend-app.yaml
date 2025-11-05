@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: uhes-60-frontend
-  namespace: argocd
+  namespace: shared-platform-tools
   labels:
     app.kubernetes.io/name: uhes-60-frontend
     app.kubernetes.io/part-of: ami-platform
