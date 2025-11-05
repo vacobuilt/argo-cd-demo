@@ -5,7 +5,7 @@ metadata:
   namespace: dev-us60-frontend
   labels:
     app: uhes-60-frontend
-    version: beta-2.1.14
+    version: beta-2.1.20
 spec:
   replicas: 1
   selector:
@@ -15,11 +15,11 @@ spec:
     metadata:
       labels:
         app: uhes-60-frontend
-        version: beta-2.1.14
+        version: beta-2.1.20
     spec:
       containers:
       - name: uhes-60-frontend
-        image: 402495469929.dkr.ecr.us-east-1.amazonaws.com/ami-platform-frontend:beta-2.1.14
+        image: 402495469929.dkr.ecr.us-east-1.amazonaws.com/ami-platform-frontend:beta-2.1.20
         envFrom:
         - configMapRef:
             name: uhes-60-frontend-config
